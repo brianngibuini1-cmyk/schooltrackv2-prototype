@@ -1,0 +1,13 @@
+[project]
+name = "schooltrack"
+version = "1.1.0"
+description = "SchoolTrack — school purchase and expenditure demo with SQLite/PostgreSQL support"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+markers = [
+    "postgresql: optional integration test against TEST_DATABASE_URL (disposable database only)",
+]
