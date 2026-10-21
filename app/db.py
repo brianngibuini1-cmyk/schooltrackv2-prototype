@@ -199,6 +199,9 @@ class Connection:
 
     def executemany(self, sql: str, params_seq: Sequence[Sequence[Any]]) -> Any:
         statement = self._prepare(sql)
+        if self.backend == "postgresql":
+            cursor = self.raw.cursor()
+            return cursor.executemany(statement, params_seq)
         return self.raw.executemany(statement, params_seq)
 
     def close(self) -> None:

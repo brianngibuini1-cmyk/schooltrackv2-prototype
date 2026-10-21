@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from app.db import (
+    Connection,
     Database,
     DatabaseConfigError,
     connect,
@@ -52,6 +53,29 @@ def test_placeholder_translation_skips_quoted_question_marks():
     assert translate_placeholders("SELECT 'already %s', ?") == (
         "SELECT 'already %s', %s"
     )
+
+
+def test_postgresql_executemany_uses_cursor():
+    class Cursor:
+        def executemany(self, statement, params_seq):
+            self.statement = statement
+            self.params_seq = params_seq
+            return self
+
+    class RawConnection:
+        def cursor(self):
+            self.last_cursor = Cursor()
+            return self.last_cursor
+
+    raw = RawConnection()
+    conn = Connection(raw, Database.from_url("postgresql://localhost/schooltrack"))
+    params = [("first", 1), ("second", 2)]
+
+    result = conn.executemany("INSERT INTO items VALUES (?, ?)", params)
+
+    assert result is raw.last_cursor
+    assert raw.last_cursor.statement == "INSERT INTO items VALUES (%s, %s)"
+    assert raw.last_cursor.params_seq == params
 
 
 def test_postgresql_schema_uses_identity_and_portable_syntax():
